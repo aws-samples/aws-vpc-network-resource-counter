@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Sample SAM template creating VPC network resource counter
+Parameters:
+  VPCId:
+    Description: The ID of the VPC you want to monitor resources for
+    Type: String
+    AllowedPattern: ^vpc-[0-9a-zA-Z-]*$
+    ConstraintDescription: Provide the vpc ID in format vpc-XXXX
+  CWNamespace:
+    Description: The custom namespace for storing generated CloudWatch metrics
+    Type: String
+    Default: CUSTOM/VPC_Network_Resource_Tracker
+    ConstraintDescription: Provide the custom CloudWatch namespace for your metrics
+  Schedule:
+    Description: How often should the metrics be published
+    Type: Number
+    Default: 60
+    MinValue: 5
+    MaxValue: 1440
+    ConstraintDescription: Provide a value between 5 and 1440
+
+
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+
+
+Resources:
+
+  # Add TGW Route Lambda
+  CountResources:
+    Type: AWS::Serverless::Function
+    FunctionName: aws-vpc-network-resource-counter
+    Properties:
+      CodeUri: networkResourceCounter/
+      Handler: networkResourceCounter.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          TARGET_VPC: !Ref VPCId
+          CW_NAMESPACE: !Ref CWNamespace
+      Events:
+        TrackMetricsScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: !Join ['', ['rate(', !Ref "Schedule", ' minutes)']]
+      Policies:
+        - Statement:
+          - Sid: ''
+            Effect: Allow
+            Action:
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DescribeNetworkInterfaceAttribute
+            - cloudwatch:PutMetricData
+            Resource: '*'
+
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+
+  CountResourcesOutput:
+    Description: "Network Resource Counter Function ARN"
+    Value: !GetAtt CountResources.Arn
