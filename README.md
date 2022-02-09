@@ -1,7 +1,7 @@
 # AWS Network Resource Counter for Amazon VPC
 
 ## About
-This project is intended to help with tracking networking resources in a single Amazon VPC. It will create an AWS Lambda function that will count specific network resources and will create CloudWatch metric for each measurement. The measurements are published at an interval of your choice.
+This project is intended to help with tracking networking resources in a single Amazon VPC. It will create an AWS Lambda function that will count specific network resources and create CloudWatch metric for each measurement. The measurements are published at an interval of your choice.
 
 ## Counted resources and their metrics:
 When you run this code you can select the CloudWatch metric namespace under which the metrics will be tracked.
